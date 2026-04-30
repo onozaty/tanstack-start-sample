@@ -10,3 +10,6 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# Vitest coverage
+coverage
