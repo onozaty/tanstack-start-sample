@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
     git \
     procps \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/node \
