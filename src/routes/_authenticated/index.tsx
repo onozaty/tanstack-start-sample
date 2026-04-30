@@ -1,12 +1,27 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "#/components/ui/button";
+import { Checkbox } from "#/components/ui/checkbox";
+import { Input } from "#/components/ui/input";
+import {
+  createTodo,
+  deleteTodo,
+  listTodos,
+  toggleTodo,
+} from "#/features/todo/server";
 import { authClient } from "#/lib/auth-client";
 
-export const Route = createFileRoute("/_authenticated/")({ component: Home });
+export const Route = createFileRoute("/_authenticated/")({
+  loader: () => listTodos(),
+  component: Home,
+});
 
 function Home() {
   const { session } = Route.useRouteContext();
+  const todos = Route.useLoaderData();
   const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -19,8 +34,32 @@ function Home() {
     });
   };
 
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setIsSubmitting(true);
+    try {
+      await createTodo({ data: { title: trimmed } });
+      setTitle("");
+      await router.invalidate();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggle = async (id: string) => {
+    await toggleTodo({ data: { id } });
+    await router.invalidate();
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteTodo({ data: { id } });
+    await router.invalidate();
+  };
+
   return (
-    <div className="p-8">
+    <div className="mx-auto max-w-2xl p-8">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">TODO</h1>
         <div className="flex items-center gap-3">
@@ -32,9 +71,55 @@ function Home() {
           </Button>
         </div>
       </header>
-      <p className="text-muted-foreground">
-        ここに TODO 一覧と追加フォームが入ります。
-      </p>
+
+      <form onSubmit={handleAdd} className="mb-6 flex gap-2">
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="やることを入力"
+          maxLength={200}
+        />
+        <Button type="submit" disabled={isSubmitting || !title.trim()}>
+          追加
+        </Button>
+      </form>
+
+      {todos.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          まだ TODO はありません。
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {todos.map((todo) => (
+            <li
+              key={todo.id}
+              className="flex items-center gap-3 rounded-md border bg-card p-3"
+            >
+              <Checkbox
+                checked={todo.done}
+                onCheckedChange={() => handleToggle(todo.id)}
+                aria-label={`${todo.title} を完了に切り替え`}
+              />
+              <span
+                className={
+                  todo.done
+                    ? "flex-1 text-muted-foreground line-through"
+                    : "flex-1"
+                }
+              >
+                {todo.title}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(todo.id)}
+              >
+                削除
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
