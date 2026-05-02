@@ -13,3 +13,7 @@ todos.json
 
 # Vitest coverage
 coverage
+
+# Playwright
+playwright-report
+test-results
