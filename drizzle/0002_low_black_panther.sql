@@ -1,0 +1,1 @@
+CREATE INDEX "todos_userId_createdAt_idx" ON "todos" USING btree ("user_id","created_at" DESC NULLS LAST);
