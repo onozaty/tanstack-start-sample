@@ -5,7 +5,7 @@ import {
   createTodoForUser,
   deleteTodoForUser,
   listTodosForUser,
-  toggleTodoForUser,
+  setTodoDoneForUser,
 } from "./operations";
 
 beforeEach(async () => {
@@ -59,52 +59,79 @@ describe("createTodoForUser", () => {
   });
 });
 
-describe("toggleTodoForUser", () => {
-  it("自分の TODO の done を反転して返す", async () => {
+describe("setTodoDoneForUser", () => {
+  it("自分の TODO の done を true に更新して返す", async () => {
     // Arrange
     const me = await createTestUser();
     const todo = await createTodoForUser(me.id, "task");
 
     // Act
-    const toggled = await toggleTodoForUser(me.id, todo.id);
+    const updated = await setTodoDoneForUser(me.id, todo.id, true);
 
     // Assert
-    expect(toggled.done).toBe(true);
+    expect(updated.done).toBe(true);
   });
 
-  it("再度トグルすると元の状態に戻る", async () => {
+  it("done=true の TODO に false を指定すると未完了に戻せる", async () => {
     // Arrange
     const me = await createTestUser();
     const todo = await createTodoForUser(me.id, "task");
-    await toggleTodoForUser(me.id, todo.id);
+    await setTodoDoneForUser(me.id, todo.id, true);
 
     // Act
-    const toggledTwice = await toggleTodoForUser(me.id, todo.id);
+    const updated = await setTodoDoneForUser(me.id, todo.id, false);
 
     // Assert
-    expect(toggledTwice.done).toBe(false);
+    expect(updated.done).toBe(false);
   });
 
-  it("他ユーザの TODO は見つからない扱いとして NOT_FOUND を投げる", async () => {
+  it("同じ done を複数回指定しても結果が変わらない (冪等)", async () => {
+    // Arrange
+    const me = await createTestUser();
+    const todo = await createTodoForUser(me.id, "task");
+    await setTodoDoneForUser(me.id, todo.id, true);
+
+    // Act
+    const updated = await setTodoDoneForUser(me.id, todo.id, true);
+
+    // Assert
+    expect(updated.done).toBe(true);
+  });
+
+  it("done=false の TODO に false を指定しても結果が変わらない (冪等)", async () => {
+    // Arrange
+    const me = await createTestUser();
+    const todo = await createTodoForUser(me.id, "task");
+
+    // Act
+    const updated = await setTodoDoneForUser(me.id, todo.id, false);
+
+    // Assert
+    expect(updated.done).toBe(false);
+  });
+
+  it("他ユーザの TODO は更新できず NOT_FOUND を投げる", async () => {
     // Arrange
     const owner = await createTestUser();
     const intruder = await createTestUser();
     const todo = await createTodoForUser(owner.id, "owner's task");
 
     // Act + Assert
-    await expect(toggleTodoForUser(intruder.id, todo.id)).rejects.toThrow(
-      "NOT_FOUND",
-    );
+    await expect(
+      setTodoDoneForUser(intruder.id, todo.id, true),
+    ).rejects.toThrow("NOT_FOUND");
   });
 
-  it("他ユーザがトグルしようとしても元の TODO の状態は変わらない", async () => {
+  it("他ユーザが更新を試みても元の TODO の done は書き換わらない", async () => {
     // Arrange
     const owner = await createTestUser();
     const intruder = await createTestUser();
     const todo = await createTodoForUser(owner.id, "owner's task");
 
-    // Act
-    await expect(toggleTodoForUser(intruder.id, todo.id)).rejects.toThrow();
+    // Act + Assert
+    await expect(
+      setTodoDoneForUser(intruder.id, todo.id, true),
+    ).rejects.toThrow("NOT_FOUND");
 
     // Assert
     const [stored] = await listTodosForUser(owner.id);
@@ -117,7 +144,7 @@ describe("toggleTodoForUser", () => {
 
     // Act + Assert
     await expect(
-      toggleTodoForUser(me.id, "00000000-0000-0000-0000-000000000000"),
+      setTodoDoneForUser(me.id, "00000000-0000-0000-0000-000000000000", true),
     ).rejects.toThrow("NOT_FOUND");
   });
 });

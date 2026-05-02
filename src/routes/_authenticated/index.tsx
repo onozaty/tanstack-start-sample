@@ -7,7 +7,7 @@ import {
   createTodo,
   deleteTodo,
   listTodos,
-  toggleTodo,
+  setTodoDone,
 } from "#/features/todo/server";
 import { authClient } from "#/lib/auth-client";
 
@@ -48,8 +48,8 @@ function Home() {
     }
   };
 
-  const handleToggle = async (id: string) => {
-    await toggleTodo({ data: { id } });
+  const handleSetDone = async (id: string, done: boolean) => {
+    await setTodoDone({ data: { id, done } });
     await router.invalidate();
   };
 
@@ -97,8 +97,14 @@ function Home() {
             >
               <Checkbox
                 checked={todo.done}
-                onCheckedChange={() => handleToggle(todo.id)}
-                aria-label={`${todo.title} を完了に切り替え`}
+                onCheckedChange={(checked) =>
+                  handleSetDone(todo.id, checked === true)
+                }
+                aria-label={
+                  todo.done
+                    ? `${todo.title} を未完了に戻す`
+                    : `${todo.title} を完了にする`
+                }
               />
               <span
                 className={

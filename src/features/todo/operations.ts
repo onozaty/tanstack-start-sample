@@ -23,22 +23,19 @@ export async function createTodoForUser(
   return created;
 }
 
-export async function toggleTodoForUser(
+export async function setTodoDoneForUser(
   userId: string,
   id: string,
+  done: boolean,
 ): Promise<Todo> {
-  const [current] = await db
-    .select({ done: todos.done })
-    .from(todos)
-    .where(and(eq(todos.id, id), eq(todos.userId, userId)));
-  if (!current) {
-    throw new Error("NOT_FOUND");
-  }
   const [updated] = await db
     .update(todos)
-    .set({ done: !current.done })
+    .set({ done })
     .where(and(eq(todos.id, id), eq(todos.userId, userId)))
     .returning();
+  if (!updated) {
+    throw new Error("NOT_FOUND");
+  }
   return updated;
 }
 

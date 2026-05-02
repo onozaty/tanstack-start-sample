@@ -6,7 +6,7 @@ import {
   createTodoForUser,
   deleteTodoForUser,
   listTodosForUser,
-  toggleTodoForUser,
+  setTodoDoneForUser,
 } from "./operations";
 
 async function requireUserId(): Promise<string> {
@@ -30,11 +30,11 @@ export const createTodo = createServerFn({ method: "POST" })
     return createTodoForUser(userId, data.title);
   });
 
-export const toggleTodo = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string().uuid() }))
+export const setTodoDone = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string().uuid(), done: z.boolean() }))
   .handler(async ({ data }) => {
     const userId = await requireUserId();
-    return toggleTodoForUser(userId, data.id);
+    return setTodoDoneForUser(userId, data.id, data.done);
   });
 
 export const deleteTodo = createServerFn({ method: "POST" })
