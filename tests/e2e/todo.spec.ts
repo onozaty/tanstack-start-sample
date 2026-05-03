@@ -6,9 +6,7 @@ test.beforeEach(async () => {
 });
 
 async function signUp(page: Page, name: string): Promise<string> {
-  const email = `${name.toLowerCase()}-${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 8)}@example.test`;
+  const email = `${name.toLowerCase()}@example.test`;
   await page.goto("/signup");
   await page.getByLabel("名前").fill(name);
   await page.getByLabel("メールアドレス").fill(email);
