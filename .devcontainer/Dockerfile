@@ -32,6 +32,9 @@ RUN mkdir -p /home/node/.claude && chown -R node:node /home/node/.claude
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# Playwright のバージョンは package.json の @playwright/test と必ず揃える
+# Playwright のバージョンは package.json の @playwright/test と必ず揃える。
+# package.json 側を上げたのにここを忘れると、ブラウザのバージョン不整合で
+# E2E 起動時に「Executable doesn't exist at ...」のエラーが出る。
+# (両者を一致させて Dev Container をリビルドすれば解消する)
 RUN npx -y playwright@1.59.1 install --with-deps chromium \
     && chmod -R o+rx /opt/playwright
