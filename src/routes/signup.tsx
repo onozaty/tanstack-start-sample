@@ -85,6 +85,7 @@ function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
