@@ -18,8 +18,6 @@ describe("listTodosForUser", () => {
     const me = await createTestUser();
     const other = await createTestUser();
     const older = await createTodoForUser(me.id, "older");
-    // 同タイミングだと order が安定しないので 1ms ずらす
-    await new Promise((r) => setTimeout(r, 5));
     const newer = await createTodoForUser(me.id, "newer");
     await createTodoForUser(other.id, "other-user-todo");
 
@@ -143,9 +141,9 @@ describe("setTodoDoneForUser", () => {
     const me = await createTestUser();
 
     // Act + Assert
-    await expect(
-      setTodoDoneForUser(me.id, "00000000-0000-0000-0000-000000000000", true),
-    ).rejects.toThrow("NOT_FOUND");
+    await expect(setTodoDoneForUser(me.id, 999999, true)).rejects.toThrow(
+      "NOT_FOUND",
+    );
   });
 });
 
@@ -206,8 +204,6 @@ describe("deleteTodoForUser", () => {
     const me = await createTestUser();
 
     // Act + Assert
-    await expect(
-      deleteTodoForUser(me.id, "00000000-0000-0000-0000-000000000000"),
-    ).rejects.toThrow("NOT_FOUND");
+    await expect(deleteTodoForUser(me.id, 999999)).rejects.toThrow("NOT_FOUND");
   });
 });

@@ -1,18 +1,18 @@
 import {
   boolean,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
-  uuid,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 
 export const todos = pgTable(
   "todos",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+    userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),

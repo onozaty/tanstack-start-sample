@@ -4,16 +4,17 @@ import { todos } from "#/db/schema/todo";
 
 export type Todo = typeof todos.$inferSelect;
 
-export async function listTodosForUser(userId: string): Promise<Todo[]> {
+export async function listTodosForUser(userId: number): Promise<Todo[]> {
+  // created_at が同 ms になっても順序が安定するよう id を tie-breaker に追加
   return db
     .select()
     .from(todos)
     .where(eq(todos.userId, userId))
-    .orderBy(desc(todos.createdAt));
+    .orderBy(desc(todos.createdAt), desc(todos.id));
 }
 
 export async function createTodoForUser(
-  userId: string,
+  userId: number,
   title: string,
 ): Promise<Todo> {
   const [created] = await db
@@ -24,8 +25,8 @@ export async function createTodoForUser(
 }
 
 export async function setTodoDoneForUser(
-  userId: string,
-  id: string,
+  userId: number,
+  id: number,
   done: boolean,
 ): Promise<Todo> {
   const [updated] = await db
@@ -40,9 +41,9 @@ export async function setTodoDoneForUser(
 }
 
 export async function deleteTodoForUser(
-  userId: string,
-  id: string,
-): Promise<{ id: string }> {
+  userId: number,
+  id: number,
+): Promise<{ id: number }> {
   const result = await db
     .delete(todos)
     .where(and(eq(todos.id, id), eq(todos.userId, userId)))

@@ -48,12 +48,12 @@ function Home() {
     }
   };
 
-  const handleSetDone = async (id: string, done: boolean) => {
+  const handleSetDone = async (id: number, done: boolean) => {
     await setTodoDone({ data: { id, done } });
     await router.invalidate();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     await deleteTodo({ data: { id } });
     await router.invalidate();
   };
