@@ -24,17 +24,16 @@ function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: async () => {
-          // root の beforeLoad を再実行し context.session を最新化してから遷移
-          // しないと、/login の beforeLoad が古いセッションで評価されて
-          // 「ログイン済みなので /」に弾き返されてしまう
-          await router.invalidate();
-          await router.navigate({ to: "/login" });
-        },
-      },
-    });
+    const { error } = await authClient.signOut();
+    if (error) {
+      console.error("signOut failed:", error);
+      return;
+    }
+    // root の beforeLoad を再実行し context.session を最新化してから遷移
+    // しないと、/login の beforeLoad が古いセッションで評価されて
+    // 「ログイン済みなので /」に弾き返されてしまう
+    await router.invalidate();
+    await router.navigate({ to: "/login" });
   };
 
   const handleAdd = async (e: React.FormEvent) => {

@@ -35,21 +35,24 @@ function SignupPage() {
     setIsLoading(true);
     setError(null);
 
-    await authClient.signUp.email(
-      { name, email, password },
-      {
-        onSuccess: async () => {
-          // root の beforeLoad を再実行し context.session を最新化してから遷移
-          // しないと、/_authenticated 側の beforeLoad が古い null セッションで
-          // 評価され /login に弾き返されてしまう
-          await router.invalidate();
-          await router.navigate({ to: "/" });
-        },
-        onError: (ctx) => setError(ctx.error.message),
-      },
-    );
-
-    setIsLoading(false);
+    try {
+      const { error: signUpError } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      });
+      if (signUpError) {
+        setError(signUpError.message ?? "サインアップに失敗しました");
+        return;
+      }
+      // root の beforeLoad を再実行し context.session を最新化してから遷移
+      // しないと、/_authenticated 側の beforeLoad が古い null セッションで
+      // 評価され /login に弾き返されてしまう
+      await router.invalidate();
+      await router.navigate({ to: "/" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
