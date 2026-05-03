@@ -33,7 +33,10 @@ export default defineConfig({
   webServer: {
     command: "pnpm build && pnpm start",
     url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    // 既存プロセスを再利用すると、スキーマ変更後など古い状態のサーバを掴んで
+    // テストが正しい結果を返さない事故が起きる。常に新規起動する方針にし、
+    // ポート競合は明示的に失敗させて気付けるようにする。
+    reuseExistingServer: false,
     timeout: 180_000,
     env: {
       ...(process.env as Record<string, string>),
