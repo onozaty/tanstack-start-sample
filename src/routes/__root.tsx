@@ -5,7 +5,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { getSession } from "#/lib/server/session";
+import { getSession } from "#/lib/session";
 import appCss from "../styles.css?url";
 
 type AuthSession = Awaited<ReturnType<typeof getSession>>;
