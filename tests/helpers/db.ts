@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db } from "#/db/client";
+import { db } from "#/db/client.server";
 
 export async function resetDb(): Promise<void> {
   const result = await db.execute<{ tablename: string }>(

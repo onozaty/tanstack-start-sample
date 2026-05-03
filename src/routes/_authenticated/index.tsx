@@ -8,7 +8,7 @@ import {
   deleteTodo,
   listTodos,
   setTodoDone,
-} from "#/features/todo/server";
+} from "#/features/todo/todo.functions";
 import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/_authenticated/")({

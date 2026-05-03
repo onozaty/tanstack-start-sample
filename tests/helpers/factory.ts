@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { db } from "#/db/client";
+import { db } from "#/db/client.server";
 import { users } from "#/db/schema/auth";
 
 export async function createTestUser(overrides?: {

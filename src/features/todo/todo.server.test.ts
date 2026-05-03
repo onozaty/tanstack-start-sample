@@ -6,7 +6,7 @@ import {
   deleteTodoForUser,
   listTodosForUser,
   setTodoDoneForUser,
-} from "./operations";
+} from "./todo.server";
 
 beforeEach(async () => {
   await resetDb();

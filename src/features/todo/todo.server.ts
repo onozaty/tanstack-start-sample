@@ -1,5 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
-import { db } from "#/db/client";
+import { db } from "#/db/client.server";
 import { todos } from "#/db/schema/todo";
 
 export type Todo = typeof todos.$inferSelect;
