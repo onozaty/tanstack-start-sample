@@ -26,9 +26,12 @@ function Home() {
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => {
-          router.invalidate();
-          router.navigate({ to: "/login" });
+        onSuccess: async () => {
+          // root の beforeLoad を再実行し context.session を最新化してから遷移
+          // しないと、/login の beforeLoad が古いセッションで評価されて
+          // 「ログイン済みなので /」に弾き返されてしまう
+          await router.invalidate();
+          await router.navigate({ to: "/login" });
         },
       },
     });
