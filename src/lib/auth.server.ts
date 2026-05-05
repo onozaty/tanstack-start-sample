@@ -17,6 +17,12 @@ export const auth = betterAuth({
       generateId: "serial",
     },
   },
+  // e2e は本番ビルドを起動するため rate limit が有効になり、
+  // /sign-up と /sign-in は 10 秒で 3 回までに制限される。連続でサインアップ
+  // するテストが 429 で落ちるのを避けるため、E2E=true のときだけ無効化する。
+  rateLimit: {
+    enabled: process.env.E2E !== "true",
+  },
   plugins: [tanstackStartCookies()],
 });
 

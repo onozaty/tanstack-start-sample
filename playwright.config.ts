@@ -41,6 +41,13 @@ export default defineConfig({
     env: {
       ...(process.env as Record<string, string>),
       PORT: String(PORT),
+      // Better Auth の rate limit を e2e で無効化する。
+      // - 本番ビルド起動 (NODE_ENV=production) のため rate limit がデフォルトで有効
+      // - Playwright は x-forwarded-for を付けないので IP が取れず警告が出る
+      // - TEST=true で 127.0.0.1 にフォールバックさせると今度は /sign-up の特別ルール
+      //   (10 秒で 3 回まで) に引っかかる
+      // 本番には影響を出さず、E2E=true 時のみ rateLimit.enabled を false にする。
+      E2E: "true",
     },
   },
 });
