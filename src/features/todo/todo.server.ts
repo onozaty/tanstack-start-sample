@@ -1,3 +1,4 @@
+import { notFound } from "@tanstack/react-router";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "#/db/client.server";
 import { todos } from "#/db/schema/todo";
@@ -35,7 +36,7 @@ export async function setTodoDoneForUser(
     .where(and(eq(todos.id, id), eq(todos.userId, userId)))
     .returning();
   if (!updated) {
-    throw new Error("NOT_FOUND");
+    throw notFound();
   }
   return updated;
 }
@@ -49,7 +50,7 @@ export async function deleteTodoForUser(
     .where(and(eq(todos.id, id), eq(todos.userId, userId)))
     .returning({ id: todos.id });
   if (result.length === 0) {
-    throw new Error("NOT_FOUND");
+    throw notFound();
   }
   return { id };
 }

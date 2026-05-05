@@ -1,3 +1,4 @@
+import { isNotFound } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetDb } from "../../../tests/helpers/db";
 import { createTestUser } from "../../../tests/helpers/factory";
@@ -108,7 +109,7 @@ describe("setTodoDoneForUser", () => {
     expect(updated.done).toBe(false);
   });
 
-  it("他ユーザの TODO は更新できず NOT_FOUND を投げる", async () => {
+  it("他ユーザの TODO は更新できず notFound を投げる", async () => {
     // Arrange
     const owner = await createTestUser();
     const intruder = await createTestUser();
@@ -117,7 +118,7 @@ describe("setTodoDoneForUser", () => {
     // Act + Assert
     await expect(
       setTodoDoneForUser(intruder.id, todo.id, true),
-    ).rejects.toThrow("NOT_FOUND");
+    ).rejects.toSatisfy(isNotFound);
   });
 
   it("他ユーザが更新を試みても元の TODO の done は書き換わらない", async () => {
@@ -129,20 +130,20 @@ describe("setTodoDoneForUser", () => {
     // Act + Assert
     await expect(
       setTodoDoneForUser(intruder.id, todo.id, true),
-    ).rejects.toThrow("NOT_FOUND");
+    ).rejects.toSatisfy(isNotFound);
 
     // Assert
     const [stored] = await listTodosForUser(owner.id);
     expect(stored.done).toBe(false);
   });
 
-  it("存在しない id を渡すと NOT_FOUND を投げる", async () => {
+  it("存在しない id を渡すと notFound を投げる", async () => {
     // Arrange
     const me = await createTestUser();
 
     // Act + Assert
-    await expect(setTodoDoneForUser(me.id, 999999, true)).rejects.toThrow(
-      "NOT_FOUND",
+    await expect(setTodoDoneForUser(me.id, 999999, true)).rejects.toSatisfy(
+      isNotFound,
     );
   });
 });
@@ -173,15 +174,15 @@ describe("deleteTodoForUser", () => {
     expect(remaining).toEqual([]);
   });
 
-  it("他ユーザの TODO は削除できず NOT_FOUND を投げる", async () => {
+  it("他ユーザの TODO は削除できず notFound を投げる", async () => {
     // Arrange
     const owner = await createTestUser();
     const intruder = await createTestUser();
     const todo = await createTodoForUser(owner.id, "owner's task");
 
     // Act + Assert
-    await expect(deleteTodoForUser(intruder.id, todo.id)).rejects.toThrow(
-      "NOT_FOUND",
+    await expect(deleteTodoForUser(intruder.id, todo.id)).rejects.toSatisfy(
+      isNotFound,
     );
   });
 
@@ -192,18 +193,22 @@ describe("deleteTodoForUser", () => {
     const todo = await createTodoForUser(owner.id, "owner's task");
 
     // Act
-    await expect(deleteTodoForUser(intruder.id, todo.id)).rejects.toThrow();
+    await expect(deleteTodoForUser(intruder.id, todo.id)).rejects.toSatisfy(
+      isNotFound,
+    );
 
     // Assert
     const remaining = await listTodosForUser(owner.id);
     expect(remaining.map((t) => t.id)).toEqual([todo.id]);
   });
 
-  it("存在しない id を渡すと NOT_FOUND を投げる", async () => {
+  it("存在しない id を渡すと notFound を投げる", async () => {
     // Arrange
     const me = await createTestUser();
 
     // Act + Assert
-    await expect(deleteTodoForUser(me.id, 999999)).rejects.toThrow("NOT_FOUND");
+    await expect(deleteTodoForUser(me.id, 999999)).rejects.toSatisfy(
+      isNotFound,
+    );
   });
 });
