@@ -1,10 +1,12 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { useState } from "react";
 import { getSession } from "#/lib/session.functions";
 import appCss from "../styles.css?url";
 
@@ -43,13 +45,19 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // SSR ではリクエストごとに新しい QueryClient を作る必要があるため、
+  // module-top ではなく useState の初期化関数で 1 度だけ生成する。
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",

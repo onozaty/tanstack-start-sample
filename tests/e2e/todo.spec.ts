@@ -42,6 +42,41 @@ test("TODO の追加・完了切替・削除ができる", async ({ page }) => {
   await expect(page.getByText("まだ TODO はありません。")).toBeVisible();
 });
 
+test("他タブで削除済みの TODO を削除しようとするとエラーバナーが表示される", async ({
+  browser,
+}) => {
+  // Arrange: 1 ユーザでサインアップして TODO を 1 件作る。
+  // 同じ context で 2 タブ開けば Cookie 共有で同じセッションになる。
+  const context = await browser.newContext();
+  const tabA = await context.newPage();
+  await signUp(tabA, "Alice");
+  await tabA.getByPlaceholder("やることを入力").fill("task");
+  await tabA.getByRole("button", { name: "追加" }).click();
+  const itemA = tabA.getByRole("listitem").filter({ hasText: "task" });
+  await expect(itemA).toBeVisible();
+
+  // Tab B でも同じ TODO が見える状態にしておく
+  const tabB = await context.newPage();
+  await tabB.goto("/");
+  const itemB = tabB.getByRole("listitem").filter({ hasText: "task" });
+  await expect(itemB).toBeVisible();
+
+  // Act: Tab A で削除 → DB から消える
+  await itemA.getByRole("button", { name: "削除" }).click();
+  await expect(tabA.getByText("まだ TODO はありません。")).toBeVisible();
+
+  // Tab B は古い state のまま削除を試みる → notFound() がサーバから返る
+  await itemB.getByRole("button", { name: "削除" }).click();
+
+  // Assert: Tab B にエラーバナー (isNotFound 文言分岐) が出る
+  await expect(
+    tabB.getByRole("alert").filter({ hasText: "対象の TODO が見つかりません" }),
+  ).toBeVisible();
+
+  // Cleanup
+  await context.close();
+});
+
 test("他ユーザの TODO は見えない", async ({ browser }) => {
   // Arrange: A が TODO を作る
   const aliceContext = await browser.newContext();
