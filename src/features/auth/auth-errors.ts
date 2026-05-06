@@ -22,10 +22,10 @@ export function mapSignUpError(error: AuthClientError): AuthErrorMapping {
       message: "このメールアドレスは既に登録されています",
     };
   }
-  return {
-    kind: "form",
-    message: error.message ?? "サインアップに失敗しました",
-  };
+  // 想定外のコードは UI には出さず、デバッグのため console に流す。
+  // error.message は英語のため UI フォールバックには使わない。
+  console.error("Unhandled signUp error:", error);
+  return { kind: "form", message: "サインアップに失敗しました" };
 }
 
 export function mapSignInError(error: AuthClientError): AuthErrorMapping {
@@ -37,8 +37,6 @@ export function mapSignInError(error: AuthClientError): AuthErrorMapping {
       message: "メールアドレスまたはパスワードが正しくありません",
     };
   }
-  return {
-    kind: "form",
-    message: error.message ?? "ログインに失敗しました",
-  };
+  console.error("Unhandled signIn error:", error);
+  return { kind: "form", message: "ログインに失敗しました" };
 }
