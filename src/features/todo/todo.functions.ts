@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireUserId } from "#/lib/auth.server";
+import { createTodoInput } from "./todo.schemas";
 import {
   createTodoForUser,
   deleteTodoForUser,
@@ -16,7 +17,7 @@ export const listTodos = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const createTodo = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ title: z.string().trim().min(1).max(200) }))
+  .inputValidator(createTodoInput)
   .handler(async ({ data }) => {
     const userId = await requireUserId();
     return createTodoForUser(userId, data.title);

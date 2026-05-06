@@ -1,3 +1,4 @@
+import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, isNotFound, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -10,12 +11,16 @@ import {
   listTodos,
   setTodoDone,
 } from "#/features/todo/todo.functions";
+import { createTodoInput } from "#/features/todo/todo.schemas";
 import { authClient } from "#/lib/auth-client";
+import { extractFirstErrorMessage } from "#/lib/form-utils";
 
 export const Route = createFileRoute("/_authenticated/")({
   loader: () => listTodos(),
   component: Home,
 });
+
+const TITLE_MAX_LENGTH = 200;
 
 function mutationErrorMessage(error: unknown): string {
   // notFound() は他タブ削除や stale な ID で起きるためメッセージを分岐する
@@ -29,7 +34,6 @@ function Home() {
   const { session } = Route.useRouteContext();
   const todos = Route.useLoaderData();
   const router = useRouter();
-  const [title, setTitle] = useState("");
 
   // 直近に走った mutation を覚えておき、その error だけバナーに反映する。
   // 単純に 3 つの error を ?? で合体すると、過去のエラー (例: 削除失敗) が
@@ -65,6 +69,17 @@ function Home() {
           ? deleteMutation.error
           : null;
 
+  const addForm = useForm({
+    defaultValues: { title: "" },
+    // サーバ側 inputValidator と同じ Zod スキーマで検証する
+    validators: { onChange: createTodoInput },
+    onSubmit: async ({ value, formApi }) => {
+      await createMutation.mutateAsync(value, {
+        onSuccess: () => formApi.reset(),
+      });
+    },
+  });
+
   const handleSignOut = async () => {
     const { error } = await authClient.signOut();
     if (error) {
@@ -76,16 +91,6 @@ function Home() {
     // 「ログイン済みなので /」に弾き返されてしまう
     await router.invalidate();
     await router.navigate({ to: "/login" });
-  };
-
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    createMutation.mutate(
-      { title: trimmed },
-      { onSuccess: () => setTitle("") },
-    );
   };
 
   return (
@@ -102,19 +107,69 @@ function Home() {
         </div>
       </header>
 
-      <form onSubmit={handleAdd} className="mb-6 flex gap-2">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="やることを入力"
-          maxLength={200}
-        />
-        <Button
-          type="submit"
-          disabled={createMutation.isPending || !title.trim()}
-        >
-          追加
-        </Button>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          void addForm.handleSubmit();
+        }}
+        className="mb-6"
+      >
+        <addForm.Field name="title">
+          {(field) => {
+            const errorMessage = field.state.meta.isDirty
+              ? extractFirstErrorMessage(field.state.meta.errors)
+              : undefined;
+            const length = field.state.value.length;
+            return (
+              <div className="flex flex-col gap-1">
+                <div className="flex gap-2">
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    placeholder="やることを入力"
+                    aria-invalid={errorMessage ? true : undefined}
+                    aria-describedby={
+                      errorMessage ? `${field.name}-error` : undefined
+                    }
+                  />
+                  <addForm.Subscribe selector={(s) => s.canSubmit}>
+                    {(canSubmit) => (
+                      <Button type="submit" disabled={!canSubmit}>
+                        追加
+                      </Button>
+                    )}
+                  </addForm.Subscribe>
+                </div>
+                <div className="flex min-h-4 items-center justify-between text-xs">
+                  {errorMessage ? (
+                    <span
+                      id={`${field.name}-error`}
+                      className="text-destructive"
+                      role="alert"
+                    >
+                      {errorMessage}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <span
+                    className={
+                      length > TITLE_MAX_LENGTH
+                        ? "text-destructive"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {length} / {TITLE_MAX_LENGTH}
+                  </span>
+                </div>
+              </div>
+            );
+          }}
+        </addForm.Field>
       </form>
 
       {mutationError && (
