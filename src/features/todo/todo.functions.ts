@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireUserId } from "#/lib/auth.server";
+import { requireUserId } from "#/features/auth/auth.server";
 import { createTodoInput } from "./todo.schemas";
 import {
   createTodoForUser,

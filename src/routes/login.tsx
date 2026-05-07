@@ -11,9 +11,9 @@ import {
   CardTitle,
 } from "#/components/ui/card";
 import { signInInput } from "#/features/auth/auth.schemas";
+import { authClient } from "#/features/auth/auth-client";
 import { mapSignInError } from "#/features/auth/auth-errors";
 import { AuthFieldRow } from "#/features/auth/auth-field-row";
-import { authClient } from "#/lib/auth-client";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: ({ context }) => {

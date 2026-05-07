@@ -155,11 +155,8 @@ pnpm dlx shadcn@latest add <component>
     │   │   └── index.tsx              # TODO 一覧 (ログイン後 TOP)
     │   └── api/auth/                  # Better Auth ハンドラ
     ├── components/ui/                 # shadcn/ui コンポーネント
-    ├── lib/
-    │   ├── auth.server.ts             # betterAuth() (サーバ)
-    │   ├── auth-client.ts             # createAuthClient (クライアント)
-    │   ├── session.functions.ts       # createServerFn のセッション取得
-    │   ├── form-utils.ts
+    ├── lib/                           # ドメイン非依存の純ユーティリティ
+    │   ├── form-utils.ts              # TanStack Form のエラー抽出ヘルパ
     │   └── utils.ts                   # shadcn の cn()
     ├── db/
     │   ├── client.ts
@@ -167,7 +164,15 @@ pnpm dlx shadcn@latest add <component>
     │       ├── auth.ts                # Better Auth が要求するテーブル
     │       ├── todo.ts
     │       └── index.ts
-    └── features/
+    └── features/                      # 機能ドメインごとの塊
+        ├── auth/
+        │   ├── auth.server.ts         # betterAuth() インスタンス + requireUserId
+        │   ├── auth-client.ts         # createAuthClient (クライアント)
+        │   ├── auth.functions.ts      # createServerFn のセッション取得
+        │   ├── auth.schemas.ts        # サインアップ・ログインの Zod スキーマ
+        │   ├── auth.schemas.test.ts
+        │   ├── auth-errors.ts         # Better Auth エラーコードのマッピング
+        │   └── auth-field-row.tsx     # フォーム共通の Field 行 UI
         └── todo/
             ├── todo.server.ts         # CRUD (権限チェック込み)
             ├── todo.server.test.ts

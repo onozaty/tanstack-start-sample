@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Input } from "#/components/ui/input";
+import { authClient } from "#/features/auth/auth-client";
 import {
   createTodo,
   deleteTodo,
@@ -12,7 +13,6 @@ import {
   setTodoDone,
 } from "#/features/todo/todo.functions";
 import { createTodoInput } from "#/features/todo/todo.schemas";
-import { authClient } from "#/lib/auth-client";
 import { extractFirstErrorMessage } from "#/lib/form-utils";
 
 export const Route = createFileRoute("/_authenticated/")({
