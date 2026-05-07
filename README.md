@@ -14,6 +14,7 @@ TanStack Start を試すためのサンプルアプリ。メール+パスワー�
 | UI | shadcn/ui + Tailwind CSS v4 |
 | フォーム / 検証 | TanStack Form + Zod (サーバ・クライアント共有スキーマ) |
 | データ取得 | TanStack Query (`@tanstack/react-query` + SSR ブリッジ) |
+| ロガー | Pino (構造化 JSON / 開発時は pino-pretty で整形) |
 | Lint / Format | Biome |
 | ユニットテスト | Vitest (実 DB に当てる方針) |
 | E2E テスト | Playwright (chromium) |
@@ -50,17 +51,20 @@ pnpm dev                 # http://localhost:3000
 | `DATABASE_URL` | 開発 DB (`sample`) への接続文字列 |
 | `BETTER_AUTH_SECRET` | Better Auth のセッション署名鍵。**本番では必ず再生成して上書き**する (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`) |
 | `BETTER_AUTH_URL` | Better Auth が返すリンクのベース URL (開発は `http://localhost:3000`) |
+| `LOG_LEVEL` | Pino のログレベル (`trace` / `debug` / `info` / `warn` / `error` / `fatal` / `silent`)。未設定なら dev=`debug` / prod=`info` にフォールバック |
 
 `.env.test` (テスト用):
 
 | 変数 | 用途 |
 |---|---|
 | `DATABASE_URL` | テスト DB (`sample_test`) への接続文字列。`pnpm db:migrate:test` / Vitest / Playwright が参照 |
+| `LOG_LEVEL` | Vitest 中はノイズを抑えるため `silent` を入れている。Playwright は `webServer.env` で `info` に上書きする |
 
 ## 開発コマンド
 
 ```bash
-pnpm dev                  # 開発サーバ (port 3000)
+pnpm dev                  # 開発サーバ (port 3000)。stdout を pino-pretty にパイプして整形表示する
+pnpm dev:raw              # 整形を介さない素の dev サーバ (JSON ログを直接見たいとき)
 pnpm build                # 本番ビルド + 型チェック
 pnpm preview              # ビルド成果物のプレビュー
 
@@ -105,6 +109,23 @@ E2E は `playwright.config.ts` の `webServer` が `pnpm dev` を `.env.test` �
 
 Better Auth が要求するテーブル定義 ([src/db/schema/auth.ts](src/db/schema/auth.ts)) を更新したいときは `pnpm auth:generate` で再生成する (`usePlural: true` 前提)。
 
+## ログ
+
+サーバ側のログは [src/lib/logger.server.ts](src/lib/logger.server.ts) の Pino で集約する。
+
+- **構造化ログ**: `{ level, time, service, env, requestId, userId, ... }` の JSON で出力。本番はそのまま、開発は `pnpm dev` が `pino-pretty` にパイプして人間可読に整形する。
+- **リクエストスコープ**: [src/lib/request-logger.ts](src/lib/request-logger.ts) のリクエスト middleware が `requestId` 付き child logger を作り、[src/lib/log-context.server.ts](src/lib/log-context.server.ts) の `AsyncLocalStorage` で同一リクエストの後段に伝搬する。`requireUserId()` 経由で認証が成立すると、その後のログには `userId` が自動で付く。
+- **使い方** (server fn 内など):
+  ```ts
+  import { getRequestLogger } from "#/lib/log-context.server";
+  const log = getRequestLogger().child({ feature: "todo", op: "create" });
+  log.info({ todoId }, "todo.create");
+  ```
+- **未捕捉エラー**: `unhandledRejection` / `uncaughtException` をプロセス全体でフックし logger に流す。
+- **Better Auth のログは抑止**: `betterAuth({ logger: { disabled: true } })`。Better Auth は `Invalid password` など想定内の入力エラーも `error` レベルで吐くため、そのまま流すと本物の障害ログを埋もれさせる。本当の障害は throw されて request middleware の `request.error` で拾えるので困らない。ライブラリ自体のデバッグが必要になったら `disabled: false` に切り替える。
+- **クライアント側**: 専用ロガーは作らない。`console.error` をそのまま使い、devtools / RUM SDK (将来導入する場合) が拾う前提にする。
+- **ファイル分離**: `*.server.ts` 命名でクライアントバンドルへの混入を防いでいる。本番ビルド後 `.output/public/assets/` を grep しても `pino` は出てこない。
+
 ## shadcn/ui コンポーネントの追加
 
 ```bash
@@ -144,8 +165,9 @@ pnpm dlx shadcn@latest add <component>
 │       └── factory.ts         # ユーザ・TODO ファクトリ
 └── src/
     ├── router.tsx
-    ├── routeTree.gen.ts       # 自動生成
-    ├── styles.css             # Tailwind v4 + shadcn
+    ├── start.ts                       # createStart() で request middleware を登録
+    ├── routeTree.gen.ts               # 自動生成
+    ├── styles.css                     # Tailwind v4 + shadcn
     ├── routes/
     │   ├── __root.tsx
     │   ├── login.tsx
@@ -155,11 +177,14 @@ pnpm dlx shadcn@latest add <component>
     │   │   └── index.tsx              # TODO 一覧 (ログイン後 TOP)
     │   └── api/auth/                  # Better Auth ハンドラ
     ├── components/ui/                 # shadcn/ui コンポーネント
-    ├── lib/                           # ドメイン非依存の純ユーティリティ
+    ├── lib/                           # ドメイン非依存のサーバ/ユーティリティ
+    │   ├── logger.server.ts           # Pino root logger
+    │   ├── log-context.server.ts      # AsyncLocalStorage で child logger を伝搬
+    │   ├── request-logger.ts          # リクエストアクセスログ middleware
     │   ├── form-utils.ts              # TanStack Form のエラー抽出ヘルパ
     │   └── utils.ts                   # shadcn の cn()
     ├── db/
-    │   ├── client.ts
+    │   ├── client.server.ts
     │   └── schema/
     │       ├── auth.ts                # Better Auth が要求するテーブル
     │       ├── todo.ts

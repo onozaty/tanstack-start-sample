@@ -48,6 +48,9 @@ export default defineConfig({
       //   (10 秒で 3 回まで) に引っかかる
       // 本番には影響を出さず、E2E=true 時のみ rateLimit.enabled を false にする。
       E2E: "true",
+      // .env.test の LOG_LEVEL=silent を打ち消し、E2E サーバはアクセスログを出す。
+      // フレーキー調査時は LOG_LEVEL=debug pnpm test:e2e で上書きできる。
+      LOG_LEVEL: process.env.LOG_LEVEL ?? "info",
     },
   },
 });

@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { betterAuth } from "better-auth";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { db } from "#/db/client.server";
+import { bindLogContext } from "#/lib/log-context.server";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", usePlural: true }),
@@ -23,6 +24,11 @@ export const auth = betterAuth({
   rateLimit: {
     enabled: process.env.E2E !== "true",
   },
+  // Better Auth 内部のログは抑止する。"Invalid password" など想定内の 4xx も
+  // error レベルで吐かれるため、そのまま流すと本物の障害ログを埋もれさせる。
+  // 本当の障害は throw されてリクエスト middleware の request.error で拾える。
+  // ライブラリ自体のデバッグが必要なときは disabled を false に切り替える。
+  logger: { disabled: true },
   plugins: [tanstackStartCookies()],
 });
 
@@ -38,5 +44,7 @@ export async function requireUserId(): Promise<number> {
   if (!Number.isSafeInteger(userId) || userId <= 0) {
     throw new Error("UNAUTHORIZED");
   }
+  // 同一リクエスト内の以降のログに userId が自動で付与される
+  bindLogContext({ userId });
   return userId;
 }
