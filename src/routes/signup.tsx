@@ -75,6 +75,7 @@ function SignupPage() {
           <CardDescription>新しいアカウントを作成します</CardDescription>
         </CardHeader>
         <form
+          className="flex flex-col gap-6"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -89,7 +90,7 @@ function SignupPage() {
                   type="text"
                   field={field}
                   autoComplete="name"
-                  showError={field.state.meta.isDirty || submitAttempted}
+                  showError={field.state.meta.isBlurred || submitAttempted}
                 />
               )}
             </form.Field>
@@ -114,7 +115,7 @@ function SignupPage() {
                   type="email"
                   field={field}
                   autoComplete="email"
-                  showError={field.state.meta.isDirty || submitAttempted}
+                  showError={field.state.meta.isBlurred || submitAttempted}
                 />
               )}
             </form.Field>
@@ -126,7 +127,7 @@ function SignupPage() {
                   field={field}
                   autoComplete="new-password"
                   hint="英字と数字を含む 8 文字以上"
-                  showError={field.state.meta.isDirty || submitAttempted}
+                  showError={field.state.meta.isBlurred || submitAttempted}
                 />
               )}
             </form.Field>
@@ -137,7 +138,7 @@ function SignupPage() {
                   type="password"
                   field={field}
                   autoComplete="new-password"
-                  showError={field.state.meta.isDirty || submitAttempted}
+                  showError={field.state.meta.isBlurred || submitAttempted}
                 />
               )}
             </form.Field>

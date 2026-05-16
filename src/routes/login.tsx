@@ -60,6 +60,7 @@ function LoginPage() {
           </CardDescription>
         </CardHeader>
         <form
+          className="flex flex-col gap-6"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -74,7 +75,7 @@ function LoginPage() {
                   type="email"
                   field={field}
                   autoComplete="email"
-                  showError={field.state.meta.isDirty || submitAttempted}
+                  showError={field.state.meta.isBlurred || submitAttempted}
                 />
               )}
             </form.Field>
@@ -85,7 +86,7 @@ function LoginPage() {
                   type="password"
                   field={field}
                   autoComplete="current-password"
-                  showError={field.state.meta.isDirty || submitAttempted}
+                  showError={field.state.meta.isBlurred || submitAttempted}
                 />
               )}
             </form.Field>

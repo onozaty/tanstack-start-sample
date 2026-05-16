@@ -5,10 +5,12 @@ import { extractFirstErrorMessage } from "#/lib/form-utils";
 // signup / login で同じ見た目のフィールド行を使うためのローカル UI ヘルパ。
 // useForm の TField generic に依存させずに使えるよう、必要最小限の構造だけ
 // duck-typing で受け取る。
+// ここでは AuthFieldRow が直接読むものだけを列挙する。isBlurred / isTouched 等の
+// 表示制御フラグは呼び出し側で評価して showError として渡す。
 
 type AuthFormField = {
   name: string;
-  state: { value: string; meta: { isDirty: boolean; errors: unknown[] } };
+  state: { value: string; meta: { errors: unknown[] } };
   handleChange: (value: string) => void;
   handleBlur: () => void;
 };

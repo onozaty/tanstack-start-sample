@@ -112,6 +112,8 @@ test("サインアップ: パスワード確認が一致しないとエラー文
   await page.getByLabel("メールアドレス").fill("alice@example.test");
   await page.getByLabel("パスワード", { exact: true }).fill("password123");
   await page.getByLabel("パスワード (確認)").fill("different1");
+  // 入力中ではなく blur 後にエラーを表示する仕様のため、フォーカスを外す。
+  await page.getByLabel("パスワード (確認)").blur();
 
   // Assert
   await expect(page.getByText("パスワードが一致しません")).toBeVisible();
