@@ -109,12 +109,21 @@ E2E は `playwright.config.ts` の `webServer` が `pnpm dev` を `.env.test` �
 
 Better Auth が要求するテーブル定義 ([src/db/schema/auth.ts](src/db/schema/auth.ts)) を更新したいときは `pnpm auth:generate` で再生成する (`usePlural: true` 前提)。
 
+## 認証ガード
+
+server function の認証は [src/features/auth/auth.middleware.ts](src/features/auth/auth.middleware.ts) の `requireAuthMiddleware` で行う。
+
+- **原則**: 認証が必要な server function には `.middleware([requireAuthMiddleware])` を必ず付ける。handler の引数から `context.userId: number` で認証済みユーザの id を受け取れる。これは TanStack Start 公式の推奨パターンに従ったもので、`createServerFn` 自体をラップする方式は、Start コンパイラが識別子名 `createServerFn` の呼び出しを検出して server コードをクライアントバンドルから分離する仕組みと衝突するため採用していない。
+- **未認証許容**: 未ログインでも呼ばれる必要がある server function (例: ルート `beforeLoad` から呼ぶ `getSession` ([src/features/auth/auth.functions.ts](src/features/auth/auth.functions.ts))) は middleware を付けない。その場合は「なぜ未認証を許容するか」をコメントで残す。
+- **書き忘れ防止**: middleware を付けるのは規約なので、コードレビューで必ず確認する。新しい server function を追加する PR では `.middleware([requireAuthMiddleware])` の有無をチェックする。
+- **ルート側のガードと二重防御**: [src/routes/_authenticated.tsx](src/routes/_authenticated.tsx) でも未ログイン時はリダイレクトしているが、server function はクライアントから直接叩けるため、server function 側でも middleware で守る。
+
 ## ログ
 
 サーバ側のログは [src/lib/logger.server.ts](src/lib/logger.server.ts) の Pino で集約する。
 
 - **構造化ログ**: `{ level, time, service, env, requestId, userId, ... }` の JSON で出力。本番はそのまま、開発は `pnpm dev` が `pino-pretty` にパイプして人間可読に整形する。
-- **リクエストスコープ**: [src/lib/request-logger.ts](src/lib/request-logger.ts) のリクエスト middleware が `requestId` 付き child logger を作り、[src/lib/log-context.server.ts](src/lib/log-context.server.ts) の `AsyncLocalStorage` で同一リクエストの後段に伝搬する。`requireUserId()` 経由で認証が成立すると、その後のログには `userId` が自動で付く。
+- **リクエストスコープ**: [src/lib/request-logger.ts](src/lib/request-logger.ts) のリクエスト middleware が `requestId` 付き child logger を作り、[src/lib/log-context.server.ts](src/lib/log-context.server.ts) の `AsyncLocalStorage` で同一リクエストの後段に伝搬する。`requireAuthMiddleware` で認証が成立すると、その後のログには `userId` が自動で付く。
 - **使い方** (server fn 内など):
   ```ts
   import { getRequestLogger } from "#/lib/log-context.server";
@@ -191,7 +200,8 @@ pnpm dlx shadcn@latest add <component>
     │       └── index.ts
     └── features/                      # 機能ドメインごとの塊
         ├── auth/
-        │   ├── auth.server.ts         # betterAuth() インスタンス + requireUserId
+        │   ├── auth.server.ts         # betterAuth() インスタンス
+        │   ├── auth.middleware.ts     # requireAuthMiddleware (認証必須ガード)
         │   ├── auth-client.ts         # createAuthClient (クライアント)
         │   ├── auth.functions.ts      # createServerFn のセッション取得
         │   ├── auth.schemas.ts        # サインアップ・ログインの Zod スキーマ

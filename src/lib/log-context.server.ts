@@ -20,7 +20,7 @@ export function getRequestLogger(): Logger {
   return als.getStore()?.logger ?? logger;
 }
 
-// requireUserId 後など、コンテキストに追加情報を載せたいときに使う。
+// 認証 middleware で userId を確定させた後など、コンテキストに追加情報を載せたいときに使う。
 // 戻り値の child を als にも反映させたいので、追加で run を入れ子にする
 // のではなく、現在のストアの logger を差し替える形。
 export function bindLogContext(fields: Record<string, unknown>): void {
