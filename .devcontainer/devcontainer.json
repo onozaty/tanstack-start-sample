@@ -5,14 +5,12 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "remoteUser": "node",
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "biomejs.biome",
-        "bradlc.vscode-tailwindcss"
-      ]
+      "extensions": ["biomejs.biome", "bradlc.vscode-tailwindcss"]
     }
   }
 }
