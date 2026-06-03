@@ -24,5 +24,5 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 # package.json 側を上げたのにここを忘れると、ブラウザのバージョン不整合で
 # E2E 起動時に「Executable doesn't exist at ...」のエラーが出る。
 # (両者を一致させて Dev Container をリビルドすれば解消する)
-RUN npx -y playwright@1.59.1 install --with-deps chromium \
+RUN npx -y playwright@1.60.0 install --with-deps chromium \
     && chmod -R o+rx /opt/playwright
