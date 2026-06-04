@@ -1,6 +1,9 @@
 FROM node:24-slim
 
-RUN npm install -g pnpm
+# pnpm は Node 同梱の corepack 経由で有効化する。
+# バージョンは package.json の packageManager フィールドで固定される。
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable pnpm
 
 RUN apt-get update && apt-get install -y \
     sudo \
