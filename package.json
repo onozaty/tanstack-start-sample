@@ -45,7 +45,7 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.577.0",
-    "nitro": "npm:nitro-nightly@latest",
+    "nitro": "3.0.260603-beta",
     "pg": "^8.20.0",
     "pino": "^10.3.1",
     "radix-ui": "^1.4.3",
